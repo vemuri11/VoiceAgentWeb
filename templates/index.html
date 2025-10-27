@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoiceExcelWeb</title>
+<style>
+body { font-family: Arial, sans-serif; text-align: center; padding: 10px; }
+#mic-btn { font-size: 3rem; width: 80px; height: 80px; border-radius: 50%; background-color: #4CAF50; color: white; border: none; margin: 20px auto; }
+#mic-btn.recording { background-color: #FF4136; }
+input, button { font-size: 1.2rem; margin: 10px; padding: 10px; width: 80%; max-width: 300px; }
+table { margin: 20px auto; border-collapse: collapse; width: 90%; max-width: 500px; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+th { background-color: #4CAF50; color: white; }
+</style>
+</head>
+<body>
+
+<h1>VoiceExcelWeb</h1>
+
+<div>
+  <button id="mic-btn" onclick="toggleMic()">🎤</button>
+  <p id="live-text"></p>
+</div>
+
+<form method="POST" action="/submit">
+  <input type="text" id="voiceText" name="voiceText" placeholder="Your spoken text here">
+  <br>
+  <button type="submit">Parse & Add</button>
+</form>
+
+<a href="/download_excel" class="btn">📥 Download Excel</a>
+
+{% if message %}
+<p>{{ message }}</p>
+{% endif %}
+
+<h2>Entries</h2>
+<table>
+  <tr><th>Name</th><th>Place</th><th>Paid</th><th>Unpaid</th><th>Timestamp</th></tr>
+  {% for row in data %}
+  <tr>
+    <td>{{ row[0] }}</td>
+    <td>{{ row[1] }}</td>
+    <td>{{ row[2] }}</td>
+    <td>{{ row[3] }}</td>
+    <td>{{ row[4] }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<script>
+let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+recognition.continuous = true;
+recognition.interimResults = true;
+
+let recording = false;
+
+function toggleMic() {
+  const btn = document.getElementById('mic-btn');
+  const input = document.getElementById('voiceText');
+  if (recording) {
+    recognition.stop();
+    btn.classList.remove('recording');
+    recording = false;
+  } else {
+    recognition.start();
+    btn.classList.add('recording');
+    recording = true;
+  }
+
+  recognition.onresult = function(event) {
+    let transcript = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      transcript += event.results[i][0].transcript;
+    }
+    document.getElementById('live-text').innerText = transcript;
+    input.value = transcript;
+  };
+}
+</script>
+
+</body>
+</html>
